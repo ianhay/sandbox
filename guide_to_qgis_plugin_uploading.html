@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Field Guide · Publishing QGIS Plugins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#241A14;
+    --ink-2:#3A2C22;
+    --paper:#F4ECDD;
+    --paper-2:#EBDFC9;
+    --paper-3:#E2D3B8;
+    --ochre:#BC5A28;
+    --ochre-deep:#9A4519;
+    --gold:#D9A441;
+    --sage:#6C7658;
+    --line:rgba(36,26,20,.14);
+    --line-strong:rgba(36,26,20,.28);
+    --shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 18px 40px -24px rgba(36,26,20,.45);
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --body:'Sora',system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-weight:300;
+    font-size:16.5px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1100px 480px at 88% -8%, rgba(217,164,65,.10), transparent 62%),
+      radial-gradient(900px 520px at -6% 12%, rgba(188,90,40,.07), transparent 60%);
+  }
+
+  .wrap{max-width:860px;margin:0 auto;padding:0 26px}
+
+  /* ---------- contour signature ---------- */
+  .contours{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .contours path{fill:none;stroke:var(--ochre);stroke-width:1;opacity:.22}
+  .contours path:nth-child(even){stroke:var(--gold);opacity:.28}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line-strong)}
+  .hero-inner{position:relative;z-index:2;padding:74px 0 58px}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;font-weight:500;
+    letter-spacing:.32em;text-transform:uppercase;color:var(--ochre-deep);
+    display:flex;align-items:center;gap:12px;margin:0 0 22px;
+  }
+  .eyebrow::after{content:"";height:1px;flex:1;background:var(--line-strong)}
+  h1{
+    font-family:var(--disp);font-weight:700;
+    font-size:clamp(2.5rem,7vw,4.15rem);line-height:1.02;
+    letter-spacing:-.02em;margin:0 0 20px;
+  }
+  h1 .thin{font-weight:400;color:var(--ink-2)}
+  h1 em{font-style:normal;color:var(--ochre)}
+  .lede{font-size:1.12rem;max-width:60ch;color:var(--ink-2);margin:0 0 30px}
+  .meta-row{
+    display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:12px;
+  }
+  .chip{
+    border:1px solid var(--line-strong);border-radius:2px;
+    padding:6px 11px;background:rgba(255,255,255,.35);
+    letter-spacing:.02em;
+  }
+  .chip b{color:var(--ochre-deep);font-weight:600}
+
+  /* ---------- track map (nav) ---------- */
+  .trackmap{
+    position:relative;z-index:2;margin-top:40px;
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+    background:var(--line-strong);border:1px solid var(--line-strong);border-radius:3px;overflow:hidden;
+  }
+  .trackmap a{
+    background:var(--paper);text-decoration:none;color:var(--ink);
+    padding:16px 16px 15px;display:block;transition:background .18s ease;
+  }
+  .trackmap a:hover{background:var(--paper-2)}
+  .trackmap .n{font-family:var(--mono);font-size:11px;color:var(--ochre);letter-spacing:.08em}
+  .trackmap .t{font-family:var(--disp);font-weight:600;font-size:1rem;margin-top:3px;letter-spacing:-.01em}
+  .trackmap .d{font-size:.78rem;color:var(--ink-2);margin-top:2px;line-height:1.45}
+
+  /* ---------- sections ---------- */
+  section{padding:56px 0;position:relative}
+  section + section{border-top:1px solid var(--line)}
+  .sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .sec-num{
+    font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ochre);
+    border:1px solid var(--line-strong);border-radius:2px;padding:3px 8px;flex:none;
+    letter-spacing:.04em;
+  }
+  h2{
+    font-family:var(--disp);font-weight:700;font-size:clamp(1.7rem,4vw,2.3rem);
+    letter-spacing:-.02em;margin:0;line-height:1.08;
+  }
+  .sec-sub{color:var(--ink-2);margin:14px 0 30px;max-width:64ch}
+  h3{
+    font-family:var(--disp);font-weight:600;font-size:1.18rem;letter-spacing:-.01em;
+    margin:34px 0 10px;color:var(--ink);
+  }
+  p{margin:0 0 15px}
+  a{color:var(--ochre-deep);text-decoration-thickness:1px;text-underline-offset:2px}
+
+  /* ---------- step list ---------- */
+  ol.steps{list-style:none;counter-reset:s;margin:0;padding:0}
+  ol.steps > li{
+    counter-increment:s;position:relative;
+    padding:0 0 26px 52px;
+  }
+  ol.steps > li::before{
+    content:counter(s,decimal-leading-zero);
+    position:absolute;left:0;top:-2px;
+    font-family:var(--mono);font-size:13px;font-weight:600;color:var(--paper);
+    background:var(--ochre);width:34px;height:34px;border-radius:3px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  ol.steps > li::after{
+    content:"";position:absolute;left:16px;top:38px;bottom:6px;width:1px;
+    background:var(--line-strong);
+  }
+  ol.steps > li:last-child::after{display:none}
+  ol.steps > li .li-t{font-family:var(--disp);font-weight:600;font-size:1.05rem;margin-bottom:3px}
+
+  /* ---------- code ---------- */
+  code{
+    font-family:var(--mono);font-size:.86em;
+    background:var(--paper-2);border:1px solid var(--line);
+    padding:1px 6px;border-radius:3px;color:var(--ink-2);
+  }
+  pre{
+    font-family:var(--mono);font-size:13px;line-height:1.7;
+    background:var(--ink);color:#F0E4D0;
+    border-radius:5px;padding:18px 20px;overflow-x:auto;margin:16px 0;
+    box-shadow:var(--shadow);
+    border:1px solid rgba(0,0,0,.3);
+  }
+  pre .c{color:#9A8B72}                 /* comment */
+  pre .k{color:var(--gold)}             /* key */
+  pre .s{color:#D6A16A}                 /* string / value */
+  pre .cmd{color:#E7B36A}               /* shell command emphasis */
+  pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+
+  /* ---------- callouts ---------- */
+  .note{
+    border-left:3px solid var(--sage);background:rgba(108,118,88,.08);
+    padding:14px 18px;border-radius:0 4px 4px 0;margin:20px 0;font-size:.95rem;
+  }
+  .warn{
+    border-left:3px solid var(--ochre);background:rgba(188,90,40,.08);
+    padding:14px 18px;border-radius:0 4px 4px 0;margin:20px 0;font-size:.95rem;
+  }
+  .note b, .warn b{font-family:var(--disp);font-weight:600}
+  .kicker{
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    display:inline-block;margin-bottom:5px;
+  }
+  .note .kicker{color:var(--sage)}
+  .warn .kicker{color:var(--ochre-deep)}
+
+  /* ---------- field table (metadata) ---------- */
+  .fields{margin:18px 0;border:1px solid var(--line-strong);border-radius:4px;overflow:hidden}
+  .fields .row{display:grid;grid-template-columns:190px 1fr;border-top:1px solid var(--line)}
+  .fields .row:first-child{border-top:none}
+  .fields .row:nth-child(odd){background:rgba(255,255,255,.28)}
+  .fields .k{
+    font-family:var(--mono);font-size:12.5px;padding:11px 14px;color:var(--ochre-deep);
+    border-right:1px solid var(--line);font-weight:500;
+  }
+  .fields .v{padding:11px 14px;font-size:.9rem;color:var(--ink-2)}
+  .fields .v .req{color:var(--ochre);font-family:var(--mono);font-size:10px;letter-spacing:.05em;margin-left:6px}
+
+  /* ---------- checklist ---------- */
+  ul.check{list-style:none;padding:0;margin:16px 0}
+  ul.check li{position:relative;padding:6px 0 6px 30px;border-top:1px dashed var(--line)}
+  ul.check li:first-child{border-top:none}
+  ul.check li::before{
+    content:"";position:absolute;left:2px;top:12px;width:12px;height:12px;
+    border:1.5px solid var(--ochre);border-radius:2px;
+  }
+  ul.check li b{font-family:var(--disp);font-weight:600}
+
+  /* ---------- gotcha cards ---------- */
+  .gotchas{display:grid;gap:1px;background:var(--line-strong);border:1px solid var(--line-strong);border-radius:4px;overflow:hidden;margin-top:18px}
+  .gotcha{background:var(--paper);padding:16px 18px}
+  .gotcha .tag{font-family:var(--mono);font-size:11px;color:var(--ochre);letter-spacing:.06em}
+  .gotcha .h{font-family:var(--disp);font-weight:600;font-size:1rem;margin:2px 0 5px}
+  .gotcha p{font-size:.9rem;margin:0;color:var(--ink-2)}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line-strong);padding:34px 0 60px;position:relative;overflow:hidden}
+  .foot-inner{position:relative;z-index:2;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;align-items:baseline}
+  .foot-inner .sig{font-family:var(--disp);font-weight:600;font-size:1.05rem}
+  .foot-inner .m{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+
+  a.reflink{font-family:var(--mono);font-size:.85rem;word-break:break-all}
+
+  @media (max-width:640px){
+    .trackmap{grid-template-columns:1fr}
+    .fields .row{grid-template-columns:1fr}
+    .fields .k{border-right:none;border-bottom:1px solid var(--line)}
+    ol.steps > li{padding-left:44px}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .fade{opacity:0;transform:translateY(14px);animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+    .fade.d1{animation-delay:.08s}.fade.d2{animation-delay:.16s}.fade.d3{animation-delay:.24s}
+    @keyframes rise{to{opacity:1;transform:none}}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <svg class="contours" viewBox="0 0 860 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M-40 90 C 160 40, 320 150, 500 90 S 820 40, 940 120"/>
+    <path d="M-40 140 C 160 90, 320 200, 500 140 S 820 90, 940 170"/>
+    <path d="M-40 200 C 180 150, 340 260, 520 200 S 820 150, 940 230"/>
+    <path d="M-40 270 C 180 220, 340 330, 520 270 S 820 220, 940 300"/>
+    <path d="M-40 340 C 200 300, 360 400, 540 340 S 820 300, 940 380"/>
+    <path d="M-40 410 C 200 370, 360 470, 540 410 S 820 370, 940 450"/>
+  </svg>
+  <div class="wrap hero-inner">
+    <p class="eyebrow fade">Field Guide · QGIS</p>
+    <h1 class="fade d1">Publishing<br><span class="thin">a plugin to</span> <em>the repo</em><br><span class="thin">&amp;</span> GitHub</h1>
+    <p class="lede fade d2">The two-track workflow you actually run at release time: cut a versioned GitHub release for the source, then push the signed zip to <code>plugins.qgis.org</code> so it shows up in <span class="thin">Plugin Manager</span>. Prep once, ship in minutes.</p>
+    <div class="meta-row fade d2">
+      <span class="chip"><b>target</b> QGIS 3 &amp; 4</span>
+      <span class="chip"><b>packaging</b> zip w/ single top dir</span>
+      <span class="chip"><b>versioning</b> semver</span>
+      <span class="chip"><b>manifest</b> metadata.txt</span>
+    </div>
+
+    <nav class="trackmap fade d3">
+      <a href="#prep"><div class="n">STAGE 00</div><div class="t">Prep the zip</div><div class="d">Structure, metadata.txt, Qt6 flag, package.</div></a>
+      <a href="#github"><div class="n">TRACK A</div><div class="t">GitHub release</div><div class="d">Tag, release notes, attach the zip.</div></a>
+      <a href="#repo"><div class="n">TRACK B</div><div class="t">plugins.qgis.org</div><div class="d">Upload, approval, updates.</div></a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ 00 PREP ============ -->
+<section id="prep">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Prep the zip</h2></div>
+  <p class="sec-sub">Both destinations consume the same artifact: a zip whose <em>only</em> top-level entry is your plugin folder. Get this right once and the rest is copy-paste.</p>
+
+  <h3>Folder layout</h3>
+  <p>The checker rejects zips that unpack loose files at the root. Everything lives inside one directory named after the plugin.</p>
+<pre><code><span class="c"># inside the zip, exactly one top-level folder:</span>
+floating_info_tool/
+├── __init__.py        <span class="c"># must expose classFactory(iface)</span>
+├── metadata.txt       <span class="c"># the manifest — see below</span>
+├── plugin.py          <span class="c"># your main module</span>
+├── icon.png           <span class="c"># toolbar/manager icon</span>
+├── LICENSE            <span class="c"># GPL-compatible for the official repo</span>
+└── resources.py       <span class="c"># compiled from resources.qrc, if used</span></code></pre>
+
+  <h3>metadata.txt — the manifest</h3>
+  <p>This file is the source of truth for version, compatibility and everything Plugin Manager displays. The repo parses it on upload.</p>
+  <div class="fields">
+    <div class="row"><div class="k">name</div><div class="v">Display name in Plugin Manager <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">qgisMinimumVersion</div><div class="v">e.g. <code>3.28</code> — the floor you actually test on <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">description</div><div class="v">One short line; no line breaks <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">version</div><div class="v">semver, e.g. <code>1.4.2</code> — must be unique per upload <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">author</div><div class="v">Your name / org <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">email</div><div class="v">Contact for the repo admins <span class="req">REQUIRED</span></div></div>
+    <div class="row"><div class="k">supportsQt6</div><div class="v"><code>True</code> once you're clean under Qt6 / QGIS 4</div></div>
+    <div class="row"><div class="k">qgisMaximumVersion</div><div class="v">Optional cap; omit to allow all 3.x (defaults to <code>3.99</code>)</div></div>
+    <div class="row"><div class="k">about</div><div class="v">Longer paragraph shown on the plugin page</div></div>
+    <div class="row"><div class="k">repository</div><div class="v">Your GitHub URL — strongly recommended</div></div>
+    <div class="row"><div class="k">tracker</div><div class="v">Issues URL (e.g. GitHub Issues)</div></div>
+    <div class="row"><div class="k">homepage</div><div class="v">Docs / landing page</div></div>
+    <div class="row"><div class="k">tags</div><div class="v">Comma-separated, aids search</div></div>
+    <div class="row"><div class="k">changelog</div><div class="v">Multi-line notes for this version</div></div>
+    <div class="row"><div class="k">experimental</div><div class="v"><code>True</code> hides it from default installs — good for betas</div></div>
+    <div class="row"><div class="k">icon</div><div class="v">Path relative to the folder, e.g. <code>icon.png</code></div></div>
+  </div>
+
+<pre><code><span class="k">[general]</span>
+<span class="k">name</span>=<span class="s">Floating Info Tool</span>
+<span class="k">qgisMinimumVersion</span>=<span class="s">3.28</span>
+<span class="k">supportsQt6</span>=<span class="s">True</span>
+<span class="k">description</span>=<span class="s">Hover-identify popup with pinning and inline editing.</span>
+<span class="k">version</span>=<span class="s">1.4.2</span>
+<span class="k">author</span>=<span class="s">Ian Hay</span>
+<span class="k">email</span>=<span class="s">you@example.com</span>
+<span class="k">repository</span>=<span class="s">https://github.com/ianhay/floating-info-tool</span>
+<span class="k">tracker</span>=<span class="s">https://github.com/ianhay/floating-info-tool/issues</span>
+<span class="k">tags</span>=<span class="s">identify, attributes, popup, vector</span>
+<span class="k">icon</span>=<span class="s">icon.png</span>
+<span class="k">changelog</span>=<span class="s">
+    1.4.2 - Fix Qt6 checker failures; resolve Bandit B110.
+    1.4.1 - Pinned-footer pill buttons; inline attribute editing.</span></code></pre>
+
+  <div class="note">
+    <span class="kicker">Since you target 3 &amp; 4</span>
+    <b>supportsQt6</b> is the single flag that tells the repo (and QGIS 4 users) your plugin is Qt6-safe. Set it only after the plugin actually loads clean under a Qt6 build — a stray <code>from PyQt5</code> import or an <code>exec_()</code> call will bite you.
+  </div>
+
+  <h3>Package it</h3>
+<pre><code><span class="c"># from the parent directory of the plugin folder</span>
+<span class="cmd">zip</span> -r floating_info_tool-1.4.2.zip floating_info_tool \
+    -x <span class="s">"*.pyc"</span> -x <span class="s">"*__pycache__*"</span> -x <span class="s">"*.git*"</span></code></pre>
+  <div class="note">
+    <span class="kicker">Nicer option</span>
+    <b>pb_tool</b> (<code>pip install pb_tool</code>) reads a <code>pb_tool.cfg</code> and gives you <code>pb_tool zip</code> — it compiles resources and excludes junk for you. Handy when you're shipping several plugins.
+  </div>
+</section>
+
+<!-- ============ TRACK A: GITHUB ============ -->
+<section id="github">
+  <div class="sec-head"><span class="sec-num">A</span><h2>GitHub release</h2></div>
+  <p class="sec-sub">This is the canonical home of the source and the human-readable changelog. Do it first so the tag and the zip you attach are the exact bytes you send to the official repo.</p>
+
+  <ol class="steps">
+    <li>
+      <div class="li-t">Commit the version bump</div>
+      Make sure <code>metadata.txt</code> <code>version=</code> matches the tag you're about to cut, then push.
+<pre><code><span class="cmd">git</span> add metadata.txt CHANGELOG.md
+<span class="cmd">git</span> commit -m <span class="s">"Release 1.4.2"</span>
+<span class="cmd">git</span> push</code></pre>
+    </li>
+    <li>
+      <div class="li-t">Tag it — semver, <code>v</code>-prefixed</div>
+      A tag per release keeps GitHub Releases and the repo version in lockstep.
+<pre><code><span class="cmd">git</span> tag -a v1.4.2 -m <span class="s">"Floating Info Tool 1.4.2"</span>
+<span class="cmd">git</span> push origin v1.4.2</code></pre>
+    </li>
+    <li>
+      <div class="li-t">Draft the release</div>
+      On GitHub: <b>Releases → Draft a new release</b>. Pick the tag <code>v1.4.2</code>, title it, and paste the changelog. Keep the notes user-facing — what changed, not how.
+    </li>
+    <li>
+      <div class="li-t">Attach the zip as a release asset</div>
+      Drag <code>floating_info_tool-1.4.2.zip</code> into the assets box. This is the download users grab if they install outside Plugin Manager, and the artifact you upload in Track B.
+    </li>
+    <li>
+      <div class="li-t">Publish</div>
+      Hit publish. The release URL is a stable link you can reference from your portfolio and from <code>metadata.txt</code>'s <code>repository</code> field.
+    </li>
+  </ol>
+
+  <div class="note">
+    <span class="kicker">Automate both tracks</span>
+    <b>qgis-plugin-ci</b> turns a pushed tag into <em>both</em> a GitHub release and an upload to <code>plugins.qgis.org</code> from GitHub Actions. Given you already run Actions elsewhere, it's the natural upgrade once the manual flow is muscle memory — <code>qgis-plugin-ci release TAG --github-token … --osgeo-username …</code>.
+  </div>
+</section>
+
+<!-- ============ TRACK B: PLUGINS.QGIS.ORG ============ -->
+<section id="repo">
+  <div class="sec-head"><span class="sec-num">B</span><h2>plugins.qgis.org</h2></div>
+  <p class="sec-sub">The official repository that feeds Plugin Manager. First-time submissions pass an automated checker and then a human approval; after that, you're a trusted owner and updates go live immediately.</p>
+
+  <ol class="steps">
+    <li>
+      <div class="li-t">Sign in</div>
+      Log in at <a href="https://plugins.qgis.org">plugins.qgis.org</a> with your OSGeo / QGIS web account. No account yet? Register once — this same identity is what qgis-plugin-ci uses as <code>--osgeo-username</code>.
+    </li>
+    <li>
+      <div class="li-t">Upload the zip</div>
+      Go to <b>Share a plugin → Upload</b> (<code>/plugins/add/</code>). Select the same zip you attached to the GitHub release. The checker validates structure, <code>metadata.txt</code>, and runs security scans on the code.
+    </li>
+    <li>
+      <div class="li-t">Clear the checker</div>
+      If it complains, it's almost always metadata or a security lint (see <em>Common failures</em> below). Fix, re-zip, bump the version if needed, re-upload.
+    </li>
+    <li>
+      <div class="li-t">Wait for approval — first version only</div>
+      A brand-new plugin lands in an approval queue and a repo admin reviews it before it's public. This is a one-time gate; be patient and make sure your <code>email</code> is monitored.
+    </li>
+    <li>
+      <div class="li-t">Ship updates instantly</div>
+      Once you own an approved plugin, every later version you upload (with a new <code>version=</code>) publishes immediately — no re-review. Users see the update badge in Plugin Manager.
+    </li>
+  </ol>
+
+  <div class="warn">
+    <span class="kicker">The version rule</span>
+    <b>Every upload needs a unique, higher <code>version=</code>.</b> You cannot re-upload <code>1.4.2</code> to fix a typo — the repo will reject a duplicate. Bump to <code>1.4.3</code>, re-tag, re-release.
+  </div>
+</section>
+
+<!-- ============ RELEASE CHECKLIST ============ -->
+<section id="checklist">
+  <div class="sec-head"><span class="sec-num">✓</span><h2>Release checklist</h2></div>
+  <p class="sec-sub">The pre-flight you run every single time, in order. If all six are true, you're clear to ship.</p>
+  <ul class="check">
+    <li><b>Version bumped</b> in <code>metadata.txt</code> and it's higher than the last upload.</li>
+    <li><b>Changelog written</b> — both in <code>metadata.txt</code> and your GitHub release notes.</li>
+    <li><b>Loads clean</b> in a fresh profile on your <code>qgisMinimumVersion</code>; if <code>supportsQt6=True</code>, verified on a Qt6 build too.</li>
+    <li><b>Zip has one top-level folder</b>, no <code>__pycache__</code>, no <code>.git</code>, LICENSE present.</li>
+    <li><b>Tag pushed</b> as <code>vX.Y.Z</code> and the GitHub release published with the zip attached.</li>
+    <li><b>Same zip uploaded</b> to plugins.qgis.org and the checker is green.</li>
+  </ul>
+</section>
+
+<!-- ============ COMMON FAILURES ============ -->
+<section id="gotchas">
+  <div class="sec-head"><span class="sec-num">!!</span><h2>Common checker failures</h2></div>
+  <p class="sec-sub">The ones that actually stop a submission, and the fix for each.</p>
+  <div class="gotchas">
+    <div class="gotcha">
+      <div class="tag">QT6 / QGIS 4</div>
+      <div class="h">Qt5-only APIs with supportsQt6 set</div>
+      <p>Bare <code>PyQt5</code> imports, <code>exec_()</code>, or <code>QRegExp</code> break under Qt6. Route through <code>qgis.PyQt</code>, use <code>exec()</code>, and gate anything version-specific behind a compat shim. Only then flip the flag.</p>
+    </div>
+    <div class="gotcha">
+      <div class="tag">SECURITY LINT · B110</div>
+      <div class="h">try / except / pass</div>
+      <p>The scanner flags silent excepts. Catch the specific exception and at minimum <code>QgsMessageLog</code> it, or add a <code># nosec</code> only where a swallow is genuinely intended and justified.</p>
+    </div>
+    <div class="gotcha">
+      <div class="tag">STRUCTURE</div>
+      <div class="h">Loose files at zip root</div>
+      <p>Zipping the contents instead of the folder. The archive must contain exactly one directory whose name matches the plugin. Re-run the zip from the parent dir.</p>
+    </div>
+    <div class="gotcha">
+      <div class="tag">MANIFEST</div>
+      <div class="h">Missing / malformed metadata.txt</div>
+      <p>Absent required field, a line break inside <code>description</code>, or a duplicate <code>version</code>. Keep <code>description</code> single-line; move prose to <code>about</code>.</p>
+    </div>
+    <div class="gotcha">
+      <div class="tag">ENTRY POINT</div>
+      <div class="h">No classFactory</div>
+      <p><code>__init__.py</code> must define <code>def classFactory(iface):</code> returning your plugin instance. Without it QGIS can't instantiate the plugin.</p>
+    </div>
+    <div class="gotcha">
+      <div class="tag">LICENSING</div>
+      <div class="h">Non-free or missing LICENSE</div>
+      <p>The official repo expects a GPL-compatible license. Include the <code>LICENSE</code> file in the zip and name the license in your docs.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <svg class="contours" viewBox="0 0 860 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="M-40 40 C 200 10, 360 90, 540 40 S 820 10, 940 70"/>
+    <path d="M-40 90 C 200 60, 360 140, 540 90 S 820 60, 940 120"/>
+    <path d="M-40 140 C 200 110, 360 190, 540 140 S 820 110, 940 170"/>
+  </svg>
+  <div class="wrap foot-inner">
+    <div>
+      <div class="sig">Field Guide · QGIS plugin publishing</div>
+      <div class="m">Prep once → GitHub release → plugins.qgis.org</div>
+    </div>
+    <div class="m">
+      <a class="reflink" href="https://plugins.qgis.org">plugins.qgis.org</a><br>
+      <a class="reflink" href="https://docs.qgis.org">docs.qgis.org · Developer Cookbook</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
